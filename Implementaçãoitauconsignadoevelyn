@@ -1,1 +1,374 @@
+1. Customer Service
+@SpringBootApplication
+@EnableEurekaClient
+public class CustomerServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CustomerServiceApplication.class, args);
+    }
+}
+
+CustomerController.java
+@RestController
+@RequestMapping("/customers")
+public class CustomerController {
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @GetMapping("/{cpf}")
+    public ResponseEntity<Customer> getCustomerByCpf(@PathVariable String cpf) {
+        return customerRepository.findByCpf(cpf)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public List<Customer> getAllCustomers() {
+        return customerRepository.findAll();
+    }
+}
+
+Customer.java
+@Entity
+public class Customer {
+    @Id
+    private String cpf;
+    private String name;
+    private boolean isCorrentista;
+    private String segmento;
+    private String convenio;
+
+    // getters and setters
+}
+
+CustomerRepository.java
+public interface CustomerRepository extends JpaRepository<Customer, String> {
+    Optional<Customer> findByCpf(String cpf);
+}
+
+2. Simulation Service
+SimulationServiceApplication.java
+
+
+@SpringBootApplication
+@EnableEurekaClient
+public class SimulationServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SimulationServiceApplication.class, args);
+    }
+}
+
+SimulationController.java
+
+@RestController
+@RequestMapping("/simulations")
+public class SimulationController {
+    @Autowired
+    private SimulationService simulationService;
+
+    @PostMapping
+    public ResponseEntity<Simulation> createSimulation(@RequestBody SimulationRequest request) {
+        Simulation simulation = simulationService.createSimulation(request);
+        return ResponseEntity.ok(simulation);
+    }
+
+    @GetMapping
+    public List<Simulation> getAllSimulations() {
+        return simulationService.getAllSimulations();
+    }
+}
+
+SimulationController.java
+
+@RestController
+@RequestMapping("/simulations")
+public class SimulationController {
+    @Autowired
+    private SimulationService simulationService;
+
+    @PostMapping
+    public ResponseEntity<Simulation> createSimulation(@RequestBody SimulationRequest request) {
+        Simulation simulation = simulationService.createSimulation(request);
+        return ResponseEntity.ok(simulation);
+    }
+
+    @GetMapping
+    public List<Simulation> getAllSimulations() {
+        return simulationService.getAllSimulations();
+    }
+}
+
+Simulation.java
+
+@Entity
+public class Simulation {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String cpf;
+    private String convenio;
+    private double valorSolicitado;
+    private double taxaAplicada;
+    private int quantidadeParcelas;
+    private double valorTotal;
+    private double valorParcela;
+
+    // getters and setters
+}
+
+SimulationRepository.java
+
+public interface SimulationRepository extends JpaRepository<Simulation, Long> {}
+
+SimulationService.java
+
+@Service
+public class SimulationService {
+    @Autowired
+    private SimulationRepository simulationRepository;
+
+    @Autowired
+    private CustomerServiceClient customerServiceClient;
+
+    public Simulation createSimulation(SimulationRequest request) {
+        Customer customer = customerServiceClient.getCustomerByCpf(request.getCpf());
+        double taxa = calcularTaxa(customer, request.getConvenio(), request.getValorSolicitado(), request.getQuantidadeParcelas());
+        double valorTotal = request.getValorSolicitado() + (request.getValorSolicitado() * taxa / 100 * request.getQuantidadeParcelas());
+        double valorParcela = valorTotal / request.getQuantidadeParcelas();
+
+        Simulation simulation = new Simulation();
+        simulation.setCpf(request.getCpf());
+        simulation.setConvenio(customer.getConvenio());
+        simulation.setValorSolicitado(request.getValorSolicitado());
+        simulation.setTaxaAplicada(taxa);
+        simulation.setQuantidadeParcelas(request.getQuantidadeParcelas());
+        simulation.setValorTotal(valorTotal);
+        simulation.setValorParcela(valorParcela);
+
+        return simulationRepository.save(simulation);
+    }
+
+    public List<Simulation> getAllSimulations() {
+        return simulationRepository.findAll();
+    }
+
+    private double calcularTaxa(Customer customer, String convenio, double valorSolicitado, int quantidadeParcelas) {
+        double taxa = 0;
+        switch (convenio) {
+            case "EP":
+                taxa = 2.6;
+                break;
+            case "OP":
+                taxa = 2.2;
+                break;
+            case "INSS":
+                taxa = 1.6;
+                break;
+        }
+        if (customer.isCorrentista()) {
+            taxa *= 0.95;
+        }
+        return taxa;
+    }
+}
+
+CustomerServiceClient.java
+
+@FeignClient(name = "customer-service")
+public interface CustomerServiceClient {
+    @GetMapping("/customers/{cpf}")
+    Customer getCustomerByCpf(@PathVariable("cpf") String cpf);
+}
+
+3. Contract Service
+
+@SpringBootApplication
+@EnableEurekaClient
+public class ContractServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ContractServiceApplication.class, args);
+    }
+}
+
+ContractController.java
+
+@RestController
+@RequestMapping("/contracts")
+public class ContractController {
+    @Autowired
+    private ContractService contractService;
+
+    @PostMapping
+    public ResponseEntity<Contract> createContract(@RequestBody ContractRequest request) {
+        Contract contract = contractService.createContract(request);
+        return ResponseEntity.ok(contract);
+    }
+
+    @GetMapping
+    public List<Contract> getAllContracts() {
+        return contractService.getAllContracts();
+    }
+}
+
+
+Contract.java
+
+@Entity
+public class Contract {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long simulationId;
+    private LocalDateTime date;
+
+    // getters and setters
+}
+
+ContractRepository.java
+public interface ContractRepository extends JpaRepository<Contract, Long> {}
+
+ContractService.java
+@Service
+public class ContractService {
+    @Autowired
+    private ContractRepository contractRepository;
+
+    public Contract createContract(ContractRequest request) {
+        Contract contract = new Contract();
+        contract.setSimulationId(request.getSimulationId());
+        contract.setDate(LocalDateTime.now());
+        return contractRepository.save(contract);
+    }
+
+    public List<Contract> getAllContracts() {
+        return contractRepository.findAll();
+    }
+}
+
+4. Gateway Service
+
+@SpringBootApplication
+@EnableEurekaClient
+public class GatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
+    }
+}
+application.yml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/customers/**
+        - id: simulation-service
+          uri: lb://simulation-service
+          predicates:
+            - Path=/simulations/**
+        - id: contract-service
+          uri: lb://contract-service
+          predicates:
+            - Path=/contracts/**
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+5. Eureka Server
+
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(EurekaServerApplication.class, args);
+    }
+}
+
+
+application.yml
+
+server:
+  port: 8761
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    enable-self-preservation: false
+
+
+Dockerização
+
+FROM openjdk:11-jre-slim
+VOLUME /tmp
+COPY target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+
+
+docker-compose.yml
+
+version: '3'
+services:
+  eureka-server:
+    image: eurekaserver
+    build:
+      context: ./eureka-server
+    ports:
+      - "8761:8761"
+
+  gateway-service:
+    image: gatewayservice
+    build:
+      context: ./gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+
+  customer-service:
+    image: customerservice
+    build:
+      context: ./customer-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+
+  simulation-service:
+    image: simulationservice
+    build:
+      context: ./simulation-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+
+  contract-service:
+    image: contractservice
+    build:
+      context: ./contract-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-server
+
+Testes
+Testes Unitários
+
+@SpringBootTest
+public class CustomerServiceApplicationTests {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void getCustomerByCpfTest() throws Exception {
+        mockMvc.perform(get("/customers/111.111.111-11"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.name").value("Michael Jackson"));
+    }
+}
+
+readme.md
+
 
