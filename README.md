@@ -30,3 +30,8 @@ Este projeto é uma plataforma de simulação de empréstimos consignados desenv
    ```sh
    docker-compose up --build
 
+   
+### Conclusão
+Com esses componentes, a plataforma de Consignado do Itaú estará pronta para realizar as operações básicas de identificação de clientes, simulação de empréstimos e armazenamento de contratos. A arquitetura de microservices permitirá uma fácil escalabilidade e manutenção da aplicação.
+
+
