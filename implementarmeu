@@ -36,5 +36,15 @@ public class clientecontroller<json> {
 
     }
 }
+Dentro do Isomnia Criar Json 
+
+
+{
+  "nome": "Rodrigo Ferreira",
+  "correntista": "Sim",
+  "cpf": "123456",
+  "segmento": "Varejo",
+  "convenio": "INSS"
+}
 
 
