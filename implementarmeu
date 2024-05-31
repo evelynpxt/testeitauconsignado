@@ -46,5 +46,85 @@ Dentro do Isomnia Criar Json
   "segmento": "Varejo",
   "convenio": "INSS"
 }
+Fase 1
+
+public class Cliente {
+    private String cpf;
+    private boolean correntista;
+    private String segmento;
+    private String convenio;
+
+    public Cliente(String cpf, boolean correntista, String segmento, String convenio) {
+        this.cpf = cpf;
+        this.correntista = correntista;
+        this.segmento = segmento;
+        this.convenio = convenio;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public boolean isCorrentista() {
+        return correntista;
+    }
+
+    public String getSegmento() {
+        return segmento;
+    }
+
+    public String getConvenio() {
+        return convenio;
+    }
+
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "cpf='" + cpf + '\'' +
+                ", correntista=" + correntista +
+                ", segmento='" + segmento + '\'' +
+                ", convenio='" + convenio + '\'' +
+                '}';
+    }
+}
+
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+public class Consignado {
+    private static Map<String, Cliente> clientes = new HashMap<>();
+
+    static {
+        // Inicialização de dados de exemplo
+        clientes.put("12345678900", new Cliente("12345678900", true, "Varejo", "Empresa Privada (EP)"));
+        clientes.put("23456789011", new Cliente("23456789011", true, "Uniclass", "Orgão Público (OP)"));
+        clientes.put("34567890122", new Cliente("34567890122", false, "", ""));
+        clientes.put("45678901233", new Cliente("45678901233", true, "Person", "INSS"));
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o CPF do cliente: ");
+        String cpf = scanner.nextLine();
+
+        Cliente cliente = clientes.get(cpf);
+        if (cliente == null) {
+            System.out.println("Cliente não encontrado.");
+        } else {
+            if (cliente.isCorrentista()) {
+                System.out.println("Cliente é correntista.");
+                System.out.println("Segmento: " + cliente.getSegmento());
+            } else {
+                System.out.println("Cliente não é correntista.");
+            }
+            System.out.println("Convênio: " + cliente.getConvenio());
+        }
+    }
+}
+
+Efetudo banco de dados no MySQL.
+
 
 
