@@ -126,5 +126,133 @@ public class Consignado {
 
 Efetudo banco de dados no MySQL.
 
+Teste 2
+
+Efetuado enums para chamar as taxas e numoeros dentro da aplicação.
+Testado com kotlin mais defini ficar em Java.
+
+Simulador Consignado
+
+package itau.consignado.Api.simuladoconsignado;
+
+enum Segmento {
+    VAREJO(24),
+    UNICLASS(36),
+    PERSON(48);
+
+    private final int maxParcelas;
+
+    Segmento(int maxParcelas) {
+        this.maxParcelas = maxParcelas;
+    }
+
+    public int getMaxParcelas() {
+        return maxParcelas;
+    }
+}
+
+package itau.consignado.Api.simuladoconsignado;
+
+enum Segmento {
+    VAREJO(24),
+    UNICLASS(36),
+    PERSON(48);
+
+    private final int maxParcelas;
+
+    Segmento(int maxParcelas) {
+        this.maxParcelas = maxParcelas;
+    }
+
+    public int getMaxParcelas() {
+        return maxParcelas;
+    }
+}
+
+package itau.consignado.Api.simuladoconsignado;
+
+public class EmprestimoSimulador {
+    public static Simulacao simularEmprestimo(String cpf, Convenio convenio, Segmento segmento, double valorSolicitado, int quantidadeParcelas, boolean isCorrentista) {
+        if (quantidadeParcelas > segmento.getMaxParcelas()) {
+            throw new IllegalArgumentException("Quantidade de parcelas excede o limite permitido para o segmento.");
+        }
+
+        if (!isCorrentista && quantidadeParcelas > 12) {
+            throw new IllegalArgumentException("Clientes não correntistas podem simular no máximo 12 parcelas.");
+        }
+
+        double taxa = convenio.getTaxa();
+        if (isCorrentista) {
+            taxa *= 0.95;
+        }
+
+        return new Simulacao(cpf, convenio, valorSolicitado, taxa, quantidadeParcelas);
+    }
+
+    public static void main(String[] args) {
+        try {
+            Simulacao simulacao = simularEmprestimo("123.456.789-00", Convenio.EMPRESA_PRIVADA, Segmento.PERSON, 10000, 24, true);
+            System.out.println(simulacao);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
+
+package itau.consignado.Api.simuladoconsignado;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+class Simulacao {
+    private static int contadorId = 0;
+
+    private final int id;
+    private final String data;
+    private final String cpf;
+    private final Convenio convenio;
+    private final double valorSolicitado;
+    private final double taxaAplicada;
+    private final int quantidadeParcelas;
+    private final double valorTotalPago;
+    private final double valorParcela;
+
+    public Simulacao(String cpf, Convenio convenio, double valorSolicitado, double taxaAplicada, int quantidadeParcelas) {
+        this.id = ++contadorId;
+        this.data = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        this.cpf = cpf;
+        this.convenio = convenio;
+        this.valorSolicitado = valorSolicitado;
+        this.taxaAplicada = taxaAplicada;
+        this.quantidadeParcelas = quantidadeParcelas;
+        this.valorTotalPago = calcularValorTotalPago();
+        this.valorParcela = this.valorTotalPago / quantidadeParcelas;
+    }
+
+    private double calcularValorTotalPago() {
+        return valorSolicitado * (1 + (taxaAplicada / 100) * quantidadeParcelas);
+    }
+
+    @Override
+    public String toString() {
+        return "Simulacao{" +
+                "id=" + id +
+                ", data='" + data + '\'' +
+                ", cpf='" + cpf + '\'' +
+                ", convenio=" + convenio +
+                ", valorSolicitado=" + valorSolicitado +
+                ", taxaAplicada=" + taxaAplicada +
+                ", quantidadeParcelas=" + quantidadeParcelas +
+                ", valorTotalPago=" + valorTotalPago +
+                ", valorParcela=" + valorParcela +
+                '}';
+    }
+}
+
+Seguindo para faze 3
+
+
+
+
 
 
