@@ -250,7 +250,9 @@ class Simulacao {
 }
 
 Seguindo para faze 3
+Teste Isomnia
 
+ Post  http://localhost:8080/cliente-200ok Apos mudar versão do Java para 17/22 - 
 
 
 
