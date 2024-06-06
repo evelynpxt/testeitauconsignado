@@ -9,11 +9,11 @@ Documentação
 Este projeto é uma plataforma de simulação de empréstimos consignados desenvolvida utilizando microservices com Spring Boot.
 
 ## Tecnologias Utilizadas
-- Java 11
+- Java 22
 - Spring Boot
 - Spring Cloud Netflix (Eureka, Gateway)
 - Spring Data JPA
-- H2 Database
+- MySQL Server
 - Docker
 
 ## Estrutura do Projeto
